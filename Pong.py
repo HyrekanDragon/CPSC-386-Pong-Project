@@ -10,7 +10,7 @@ pygame.init()
 
 # Set up window
 W_WIDTH = 600
-W_HEIGHT = 600
+W_HEIGHT = 630
 ws = pygame.display.set_mode((W_WIDTH, W_HEIGHT), 0, 32)
 
 # Set up the fonts
@@ -20,6 +20,8 @@ font2 = pygame.font.SysFont(None, 32)
 # Set up Colors
 BACKGROUND = (0, 0, 0)
 WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+PURPLE = (255, 0, 255)
 
 # Set the game speed
 SPEED = 5
@@ -105,6 +107,7 @@ class Score:
         self.score_ = 0
 
 
+# Create the paddles
 p1 = Paddle(rect=(10, 250, 10, 100), clr='#FF0000', orientation='vertical')
 p3 = Paddle(rect=(125, 10, 100, 10), clr='#FF0000', orientation='horizontal')
 p5 = Paddle(rect=(125, 580, 100, 10), clr='#FF0000', orientation='horizontal')
@@ -115,9 +118,10 @@ p6 = Paddle(rect=(375, 580, 100, 10), clr='#0000FF', orientation='horizontal')
 
 players = (p1, p2, p3, p4, p5, p6)
 
+# Create the ball
 ball = Ball(x_center=300, y_center=300, clr='#FFFFFF', velocity=(random.randint(1, 5), random.randint(1, 5)))
 
-# Get paddle images
+# Get paddle images and  stretch them out
 player_paddle_image = pygame.image.load('blue paddle.png')
 player_stretched_image_h = pygame.transform.scale(player_paddle_image, (p4.get_rect().width, p4.get_rect().height))
 player_stretched_image_v = pygame.transform.scale(player_paddle_image, (p2.get_rect().width, p2.get_rect().height))
@@ -144,6 +148,7 @@ def play():
         p_won = False
         c_won = False
         answer = True
+        # Loop Variables
         # Check for the QUIT event
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -205,18 +210,19 @@ def play():
         ws.fill(BACKGROUND)
 
         # Draw Net
-        for x in range(0, W_HEIGHT, 10):
-            pygame.draw.rect(ws, WHITE, pygame.Rect(299, x, 2, 5))
+        for x in range(0, W_HEIGHT-30, 10):
+            pygame.draw.rect(ws, GREEN, pygame.Rect(299, x, 2, 5))
 
+
+        # Move the Players
         r1 = p2.get_rect()
         r2 = p4.get_rect()
 
-        # Move the Players
-        if player_move_down and r1.bottom < W_HEIGHT:
+        if player_move_down and r1.bottom < W_HEIGHT-30:
             p2.move_rect_v(SPEED * 1.5)
         if player_move_up and r1.top > 0:
             p2.move_rect_v(-SPEED * 1.5)
-        if player_move_right and r2.right < W_HEIGHT:
+        if player_move_right and r2.right < W_HEIGHT-30:
             p4.move_rect_h(SPEED)
             p6.move_rect_h(SPEED)
         if player_move_left and r2.left > 300:
@@ -224,7 +230,7 @@ def play():
             p6.move_rect_h(-SPEED)
 
         # Move the Computer
-        if computer_move_down and c1.bottom < W_HEIGHT:
+        if computer_move_down and c1.bottom < W_HEIGHT-30:
             p1.move_rect_v(SPEED/3)
         if computer_move_up and c1.top > 0:
             p1.move_rect_v(-SPEED/3)
@@ -235,12 +241,13 @@ def play():
             p3.move_rect_h(-SPEED/4)
             p5.move_rect_h(-SPEED/4)
 
-        # Update players position
+        # Update paddle position
         for p in players:
             r = p.get_rect()
             c = p.get_color()
             pygame.draw.rect(ws, c, r)
 
+        # Blit images onto the paddles
         ws.blit(player_stretched_image_v, p2.get_rect())
         ws.blit(player_stretched_image_h, p4.get_rect())
         ws.blit(player_stretched_image_h, p6.get_rect())
@@ -258,7 +265,7 @@ def play():
         br.left += bv[0]
         br.top += bv[1]
 
-        # Collision detection
+        # Ball-Wall Collision detection
         if br.left < 0 or br.right > W_WIDTH:
             if br.left < 0:
                 p_score.increment()
@@ -270,7 +277,7 @@ def play():
             bcenter[1] = 300
             bv[0] = random.randint(-5, 5)
             bv[1] = random.randint(-5, 5)
-        if br.top < 0 or br.bottom > W_HEIGHT:
+        if br.top < 0 or br.bottom > W_HEIGHT-30:
             if bcenter[0] < 300:
                 p_score.increment()
             else:
@@ -288,6 +295,7 @@ def play():
             bv[0] = random.randint(-5, 5)
             bv[1] = random.randint(-5, 5)
 
+        # Ball-Paddle Collision Detection
         for p in players:
             r = p.get_rect()
             if br.colliderect(r):
@@ -321,7 +329,7 @@ def play():
         # Update ball position
         pygame.draw.circle(ws, bc, (int(bcenter[0]), int(bcenter[1])), 10, 0)
 
-        # Check if game won:
+        # Check if game won
         if p_win.get_score() == 3:
             p_won = True
             game_win.play()
@@ -329,19 +337,33 @@ def play():
             c_won = True
             game_lost.play()
 
-        # Draw Score Text
-        textobj1 = font.render('%s-%s' % (c_score.get_score(), c_win.get_score()), 1, WHITE)
+        # Get points needed to win
+        if c_score.get_score() >= 10:
+            p_points_to_win = c_score.get_score() - p_score.get_score() + 2  # 8 - 10 + 2 = 0
+        else:
+            p_points_to_win = 11 - p_score.get_score()
+
+        if p_score.get_score() >= 10:
+            c_points_to_win = p_score.get_score() - c_score.get_score() + 2  # 10 - 8 + 2 = 4
+        else:
+            c_points_to_win = 11 - c_score.get_score()
+
+        # Draw Scores Text
+        text_rect = pygame.Rect((0, W_HEIGHT-30, W_WIDTH, 50))
+        pygame.draw.rect(ws, PURPLE, text_rect)
+        textobj1 = font.render('P:%s N:%s W:%s' % (c_score.get_score(), c_points_to_win, c_win.get_score()), 1, WHITE)
         textrect1 = textobj1.get_rect()
-        textrect1.topleft = (0, 0)
+        textrect1.topleft = (0, W_HEIGHT-30)
         ws.blit(textobj1, textrect1)
 
-        textobj2 = font.render('%s-%s' % (p_score.get_score(), p_win.get_score()), 1, WHITE)
+        textobj2 = font.render('P:%s N:%s W:%s' % (p_score.get_score(), p_points_to_win, p_win.get_score()), 1, WHITE)
         textrect2 = textobj2.get_rect()
-        textrect2.topleft = (W_WIDTH-70, 0)
+        textrect2.topleft = (300, W_HEIGHT-30)
         ws.blit(textobj2, textrect2)
 
         if c_won or p_won:
             while answer:
+                # Get player input to replay or end the game
                 for event2 in pygame.event.get():
                     if event2.type == QUIT:
                         pygame.quit()
@@ -360,6 +382,7 @@ def play():
                             pygame.quit()
                             sys.exit()
 
+                # Print out end-game messages
                 if p_won:
                     win_message = font2.render('YOU WON, CONGRATULATIONS', 1, WHITE)
                     win_rect = win_message.get_rect()
