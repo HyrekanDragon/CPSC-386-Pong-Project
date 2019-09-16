@@ -15,6 +15,7 @@ ws = pygame.display.set_mode((W_WIDTH, W_HEIGHT), 0, 32)
 
 # Set up the fonts
 font = pygame.font.SysFont(None, 48)
+font2 = pygame.font.SysFont(None, 32)
 
 # Set up Colors
 BACKGROUND = (0, 0, 0)
@@ -25,6 +26,10 @@ SPEED = 5
 
 # Set sounds
 bounce_sound = pygame.mixer.Sound('pong.wav')
+match_win = pygame.mixer.Sound('match win.wav')
+match_lost = pygame.mixer.Sound('match lost.wav')
+game_win = pygame.mixer.Sound('game win.wav')
+game_lost = pygame.mixer.Sound('game lost.wav')
 
 
 def vector2(velocity):
@@ -301,12 +306,14 @@ def play():
                         bv[0] = random.randint(-5, -1)
 
         # Check  if match won
-        if p_score.get_score() >= 2 or c_score.get_score() >= 2:
+        if p_score.get_score() >= 11 or c_score.get_score() >= 11:
             if p_score.get_score() - c_score.get_score() >= 2:
+                match_win.play()
                 p_score.reset()
                 c_score.reset()
                 p_win.increment()
             elif p_score.get_score() - c_score.get_score() <= -2:
+                match_lost.play()
                 p_score.reset()
                 c_score.reset()
                 c_win.increment()
@@ -315,10 +322,12 @@ def play():
         pygame.draw.circle(ws, bc, (int(bcenter[0]), int(bcenter[1])), 10, 0)
 
         # Check if game won:
-        if p_win.get_score() == 1:
+        if p_win.get_score() == 3:
             p_won = True
-        if c_win.get_score() == 1:
+            game_win.play()
+        if c_win.get_score() == 3:
             c_won = True
+            game_lost.play()
 
         # Draw Score Text
         textobj1 = font.render('%s-%s' % (c_score.get_score(), c_win.get_score()), 1, WHITE)
@@ -333,28 +342,6 @@ def play():
 
         if c_won or p_won:
             while answer:
-                if p_won:
-                    win_message = font.render('YOU WON, CONGRATULATIONS', 1, WHITE)
-                    win_rect = win_message.get_rect()
-                    win_rect.topleft = (300, 300)
-                    ws.blit(win_message, win_rect)
-
-                    pygame.display.update()
-                    time.sleep(0.01)
-                elif c_won:
-                    lose_message = font.render('YOU LOST, PLEASE TRY AGAIN', 1, WHITE)
-                    lose_rect = lose_message.get_rect()
-                    lose_rect.topleft = (300, 300)
-                    ws.blit(lose_message, lose_rect)
-
-                    pygame.display.update()
-                    time.sleep(0.01)
-
-                play_again = font.render('DO YOU WANT TO PLAY AGAIN? PRESS Y/N', 1, WHITE)
-                play_rect = play_again.get_rect()
-                play_rect.topleft = (300, 400)
-                ws.blit(play_again, play_rect)
-
                 for event2 in pygame.event.get():
                     if event2.type == QUIT:
                         pygame.quit()
@@ -364,10 +351,33 @@ def play():
                             pygame.quit()
                             sys.exit()
                         if event2.key == K_y:
+                            p_score.reset()
+                            c_score.reset()
+                            p_win.reset()
+                            c_win.reset()
                             answer = False
                         if event2.key == K_n:
                             pygame.quit()
                             sys.exit()
+
+                if p_won:
+                    win_message = font2.render('YOU WON, CONGRATULATIONS', 1, WHITE)
+                    win_rect = win_message.get_rect()
+                    win_rect.topleft = (150, 200)
+                    ws.blit(win_message, win_rect)
+                elif c_won:
+                    lose_message = font2.render('YOU LOST, PLEASE TRY AGAIN', 1, WHITE)
+                    lose_rect = lose_message.get_rect()
+                    lose_rect.topleft = (150, 200)
+                    ws.blit(lose_message, lose_rect)
+
+                play_again = font2.render('DO YOU WANT TO PLAY AGAIN? PRESS Y/N', 1, WHITE)
+                play_rect = play_again.get_rect()
+                play_rect.topleft = (75, 300)
+                ws.blit(play_again, play_rect)
+
+                pygame.display.update()
+                time.sleep(0.01)
 
         pygame.display.update()
         time.sleep(0.01)
