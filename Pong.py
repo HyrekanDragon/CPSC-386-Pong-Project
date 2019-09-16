@@ -213,7 +213,6 @@ def play():
         for x in range(0, W_HEIGHT-30, 10):
             pygame.draw.rect(ws, GREEN, pygame.Rect(299, x, 2, 5))
 
-
         # Move the Players
         r1 = p2.get_rect()
         r2 = p4.get_rect()
